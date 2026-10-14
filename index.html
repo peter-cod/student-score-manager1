@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A simple student score management system built with HTML, CSS and JavaScript arrays.">
+  <title>Student Score Manager</title>
+  <style>
+    :root { --ink:#172033; --muted:#667085; --line:#e5e7eb; --primary:#3157d5; --bg:#f5f7fb; --white:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink); }
+    header { background:linear-gradient(120deg,#203a8f,#4169e1); color:white; padding:32px 20px; }
+    .wrap { width:min(1000px, calc(100% - 32px)); margin:0 auto; }
+    header h1 { margin:0 0 8px; font-size:clamp(1.7rem,4vw,2.4rem); }
+    header p { margin:0; color:#e5eaff; }
+    main { padding:24px 0 40px; }
+    .grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
+    .stat, .panel { background:var(--white); border:1px solid var(--line); border-radius:14px; box-shadow:0 4px 16px #17203308; }
+    .stat { padding:17px; }
+    .stat span { display:block; color:var(--muted); font-size:.86rem; margin-bottom:8px; }
+    .stat strong { font-size:1.6rem; }
+    .panel { padding:20px; margin-bottom:18px; }
+    h2 { font-size:1.15rem; margin:0 0 15px; }
+    .form-row { display:grid; grid-template-columns:2fr 1fr auto; gap:12px; align-items:end; }
+    label { display:block; font-size:.9rem; font-weight:600; margin-bottom:7px; }
+    input { width:100%; border:1px solid #cbd2e1; border-radius:9px; padding:11px 12px; font:inherit; background:white; }
+    input:focus { outline:3px solid #3157d526; border-color:var(--primary); }
+    button { border:0; border-radius:9px; padding:11px 15px; font:inherit; font-weight:650; cursor:pointer; }
+    .primary { background:var(--primary); color:white; }
+    .secondary { background:#eef2ff; color:#263f9c; }
+    .danger { background:#fff0f0; color:#b42318; padding:8px 10px; }
+    .toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+    .toolbar input { max-width:280px; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; min-width:520px; }
+    th,td { text-align:left; padding:12px 10px; border-bottom:1px solid var(--line); }
+    th { color:var(--muted); font-size:.82rem; text-transform:uppercase; letter-spacing:.03em; }
+    .empty { color:var(--muted); text-align:center; padding:26px 10px; }
+    .notice { min-height:1.4em; color:#b42318; font-size:.9rem; margin-top:8px; }
+    .footnote { color:var(--muted); font-size:.88rem; line-height:1.5; }
+    footer { text-align:center; color:var(--muted); padding:0 16px 26px; font-size:.85rem; }
+    @media (max-width:680px) {
+      .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .form-row { grid-template-columns:1fr; }
+      .form-row button { width:100%; }
+      .panel { padding:16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Student Score Manager</h1>
+      <p>A simple score tracker demonstrating arrays, loops, and basic calculations.</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="grid" aria-label="Score summary">
+      <div class="stat"><span>Students</span><strong id="count">0</strong></div>
+      <div class="stat"><span>Total scores</span><strong id="total">0</strong></div>
+      <div class="stat"><span>Average score</span><strong id="average">—</strong></div>
+      <div class="stat"><span>Highest score</span><strong id="highest">—</strong></div>
+    </section>
+
+    <section class="panel">
+      <h2>Add a student score</h2>
+      <form id="scoreForm">
+        <div class="form-row">
+          <div>
+            <label for="studentName">Student name</label>
+            <input id="studentName" name="studentName" placeholder="e.g. Ama Mensah" maxlength="70" required>
+          </div>
+          <div>
+            <label for="studentScore">Score (0–100)</label>
+            <input id="studentScore" name="studentScore" type="number" min="0" max="100" step="1" placeholder="e.g. 78" required>
+          </div>
+          <button class="primary" type="submit">Add score</button>
+        </div>
+        <div class="notice" id="notice" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <h2 style="margin:0">Student records</h2>
+        <input id="search" type="search" placeholder="Search student..." aria-label="Search student">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Student</th><th>Score</th><th>Grade</th><th>Action</th></tr></thead>
+          <tbody id="scoreRows"></tbody>
+        </table>
+        <div id="empty" class="empty">No student scores yet. Add a score above to begin.</div>
+      </div>
+      <p class="footnote">Note: this demo stores records in your browser while the page is open. Refreshing the page resets the list. It does not use a database.</p>
+      <button id="clearAll" class="secondary" type="button">Clear all records</button>
+    </section>
+  </main>
+  <footer>Built with HTML, CSS and JavaScript • Array-based student score project</footer>
+
+  <script>
+    // Array: each object represents one student's record.
+    const students = [
+      { name: "Kojo", score: 65 },
+      { name: "Ama", score: 80 },
+      { name: "Yaw", score: 55 },
+      { name: "Esi", score: 90 }
+    ];
+
+    const form = document.getElementById("scoreForm");
+    const nameInput = document.getElementById("studentName");
+    const scoreInput = document.getElementById("studentScore");
+    const rows = document.getElementById("scoreRows");
+    const empty = document.getElementById("empty");
+    const notice = document.getElementById("notice");
+    const search = document.getElementById("search");
+
+    function gradeFor(score) {
+      if (score >= 80) return "A";
+      if (score >= 70) return "B";
+      if (score >= 60) return "C";
+      if (score >= 50) return "D";
+      return "F";
+    }
+
+    function render() {
+      const total = students.reduce((sum, student) => sum + student.score, 0);
+      const highest = students.length ? Math.max(...students.map(student => student.score)) : null;
+      document.getElementById("count").textContent = students.length;
+      document.getElementById("total").textContent = total;
+      document.getElementById("average").textContent = students.length ? (total / students.length).toFixed(1) : "—";
+      document.getElementById("highest").textContent = highest === null ? "—" : highest;
+
+      const query = search.value.trim().toLowerCase();
+      const visible = students
+        .map((student, index) => ({ ...student, index }))
+        .filter(student => student.name.toLowerCase().includes(query));
+
+      rows.innerHTML = "";
+      visible.forEach(student => {
+        const tr = document.createElement("tr");
+        const values = [student.index + 1, student.name, student.score, gradeFor(student.score)];
+        values.forEach(value => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        const action = document.createElement("td");
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "danger";
+        remove.textContent = "Delete";
+        remove.setAttribute("aria-label", "Delete " + student.name);
+        remove.addEventListener("click", () => {
+          students.splice(student.index, 1);
+          render();
+          notice.textContent = "Student record deleted.";
+        });
+        action.appendChild(remove);
+        tr.appendChild(action);
+        rows.appendChild(tr);
+      });
+      empty.style.display = visible.length ? "none" : "block";
+      if (!students.length) empty.textContent = "No student scores yet. Add a score above to begin.";
+      else if (!visible.length) empty.textContent = "No students match your search.";
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const name = nameInput.value.trim();
+      const score = Number(scoreInput.value);
+      if (!name) { notice.textContent = "Please enter a student name."; return; }
+      if (!Number.isInteger(score) || score < 0 || score > 100) {
+        notice.textContent = "Enter a whole-number score from 0 to 100.";
+        return;
+      }
+      students.push({ name, score }); // Add a new record to the array.
+      form.reset();
+      notice.textContent = "Student score added successfully.";
+      render();
+      nameInput.focus();
+    });
+
+    search.addEventListener("input", render);
+    document.getElementById("clearAll").addEventListener("click", () => {
+      if (!students.length) { notice.textContent = "There are no records to clear."; return; }
+      if (confirm("Delete all student records?")) {
+        students.length = 0;
+        render();
+        notice.textContent = "All student records cleared.";
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
